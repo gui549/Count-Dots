@@ -35,7 +35,11 @@ def train(args):
             'save_file_name': args.save_path
         })
     
-    model = resnet18()
+    if args.model == 'resnet':
+        model = resnet18
+    elif args.model == '':
+        pass
+
     model = model.to(device)
 
     optimizer = torch.optim.Adam(model.parameters() ,lr=args.lr, betas=(0.9, 0.999))
@@ -74,8 +78,9 @@ if __name__ == '__main__':
     parser.add_argument('-lr','--lr',help='learning rate',default=5e-4, type=float)
     parser.add_argument("-b", "--batch_size", help="batch_size", default=64, type=int)
     parser.add_argument("-d", "--data_mode", help="use which database, [davis, ]", default='dots', type=str)
-    parser.add_argument("-s", "--scheduler", help = "step, plateau, cosine, lambda", default ='step', type=str)
-    parser.add_argument("-f", "--save_path", help='save path for model', default='base', type=str)
+    parser.add_argument("-m", "--model", help="use which model, [resnet, ]", default='resnet', type=str)
+    parser.add_argument("-s", "--scheduler", help = "step, plateau, cosine, lambda", default = 'step', type =str)
+    parser.add_argument("-f", "--save_path", help='save path for model', default = 'base', type=str)
     parser.add_argument("-l", "--log", help='log to wandb', action='store_true')
     args = parser.parse_args()
 
