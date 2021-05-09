@@ -3,3 +3,4 @@
 .vscode/
 datasets/
 venv/
+_pycache_
