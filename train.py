@@ -9,6 +9,7 @@ import wandb
 from dataloader import DotsDataset
 from utils import get_scheduler
 from models import * # Put model name here
+from torchvision import transforms
 
 import pdb
 
@@ -21,8 +22,8 @@ def train(args):
     save_file_name = args.save_path
 
     if args.data_mode == 'dots':
-        root_dir = './datasets/Dots'
-        dataset = DotsDataset(root_dir)
+        root_dir = './datasets/Dots/'
+        dataset = DotsDataset(root_dir, transforms.Compose([transforms.ToTensor()]))
         loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
     else:
         raise NotImplementedError
@@ -34,13 +35,12 @@ def train(args):
             'save_file_name': args.save_path
         })
     
-    model = None
+    model = resnet18()
     model = model.to(device)
 
-    optimizer = torch.optim.Adam(model.params() ,lr=args.lr, betas=(0.9, 0.999))
+    optimizer = torch.optim.Adam(model.parameters() ,lr=args.lr, betas=(0.9, 0.999))
     lr_scheduler = get_scheduler(optimizer, args)
-    criterion = None
-
+    criterion = torch.nn.CrossEntropyLoss()
     for epoch in range(epochs):
         running_loss = 0.
         
@@ -74,8 +74,8 @@ if __name__ == '__main__':
     parser.add_argument('-lr','--lr',help='learning rate',default=5e-4, type=float)
     parser.add_argument("-b", "--batch_size", help="batch_size", default=64, type=int)
     parser.add_argument("-d", "--data_mode", help="use which database, [davis, ]", default='dots', type=str)
-    parser.add_argument("-s", "--scheduler", help = "step, plateau, cosine, lambda", default = 'step', type =str)
-    parser.add_argument("-f", "--save_path", help='save path for model', default = 'base', type=str)
+    parser.add_argument("-s", "--scheduler", help = "step, plateau, cosine, lambda", default ='step', type=str)
+    parser.add_argument("-f", "--save_path", help='save path for model', default='base', type=str)
     parser.add_argument("-l", "--log", help='log to wandb', action='store_true')
     args = parser.parse_args()
 
