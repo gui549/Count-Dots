@@ -1,5 +1,7 @@
 /test.py
 /makedata.py
+experiments/
+wandb/
 .vscode/
 datasets/
 venv/
