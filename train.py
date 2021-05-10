@@ -36,7 +36,7 @@ def train(args):
         })
     
     if args.model == 'resnet':
-        model = resnet18
+        model = resnet18()
     elif args.model == '':
         pass
 
