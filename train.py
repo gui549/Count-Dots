@@ -10,6 +10,7 @@ from dataloader import DotsDataset
 from utils import get_scheduler
 from models import * # Put model name here
 from torchvision import transforms
+from test import Eval
 
 import pdb
 
@@ -23,7 +24,9 @@ def train(args):
 
     if args.data_mode == 'dots':
         root_dir = './datasets/Dots/'
+        test_dir = './datasets/TestDots/'
         dataset = DotsDataset(root_dir, transforms.Compose([transforms.ToTensor()]))
+        testset = DotsDataset(test_dir, transforms.Compose([transforms.ToTensor()]))
         loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
     else:
         raise NotImplementedError
@@ -36,7 +39,7 @@ def train(args):
         })
     
     if args.model == 'resnet':
-        model = resnet18()
+        model = resnet18(args.num_classes)
     elif args.model == '':
         pass
 
@@ -63,7 +66,8 @@ def train(args):
             optimizer.step()
 
         lr_scheduler.step()
-        
+        Eval(model, testset, args)
+
         if args.log:
             wandb.log({'running loss':running_loss/len(loader)})
         if epoch % 10 == 0 and epoch != 0:
@@ -78,6 +82,7 @@ if __name__ == '__main__':
     parser.add_argument('-lr','--lr',help='learning rate',default=5e-4, type=float)
     parser.add_argument("-b", "--batch_size", help="batch_size", default=64, type=int)
     parser.add_argument("-d", "--data_mode", help="use which database, [davis, ]", default='dots', type=str)
+    parser.add_argument("-n", "--num_classes", help="number of classes", default='31', type=int)
     parser.add_argument("-m", "--model", help="use which model, [resnet, ]", default='resnet', type=str)
     parser.add_argument("-s", "--scheduler", help = "step, plateau, cosine, lambda", default = 'step', type =str)
     parser.add_argument("-f", "--save_path", help='save path for model', default = 'base', type=str)

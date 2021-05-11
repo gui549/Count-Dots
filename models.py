@@ -1,7 +1,6 @@
 import torch
 from torch import Tensor
 import torch.nn as nn
-from .utils import load_state_dict_from_url
 from typing import Type, Any, Callable, Union, List, Optional
 
 __all__ = ['resnet18']
@@ -165,5 +164,5 @@ class ResNet(nn.Module):
     def forward(self, x: Tensor) -> Tensor:
         return self._forward_impl(x)
 
-def resnet18(**kwargs: Any) -> ResNet:
-    return ResNet(BasicBlock, [2, 2, 2, 2], **kwargs)
+def resnet18(num_classes: int, **kwargs: Any) -> ResNet:
+    return ResNet(BasicBlock, [2, 2, 2, 2], num_classes, **kwargs)
