@@ -3,6 +3,7 @@ import numpy as np
 
 import argparse
 import random
+from torch.utils import data
 from tqdm import tqdm
 import wandb
 
@@ -10,7 +11,7 @@ from dataloader import DotsDataset
 from utils import get_scheduler
 from models import * # Put model name here
 from torchvision import transforms
-from test import Eval
+from test import eval
 
 import pdb
 
@@ -25,10 +26,18 @@ def train(args):
     if args.data_mode == 'dots':
         root_dir = './datasets/Dots/'
         test_dir = './datasets/TestDots/'
-        dataset = DotsDataset(root_dir, transforms.Compose([transforms.ToTensor()]))
+        trainset = DotsDataset(root_dir, transforms.Compose([transforms.ToTensor()]))
         testset = DotsDataset(test_dir, transforms.Compose([transforms.ToTensor()]))
-        loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
-        test_loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
+        mean_, std_ = get_mean_std(trainset)
+        transform_train = transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize(mean_, std_),
+        ])
+        transformed_trainset = DotsDataset(root_dir, transform_train)
+        train_loader = torch.utils.data.DataLoader(transformed_trainset, batch_size=args.batch_size, shuffle=True)
+        test_loader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=True)
     else:
         raise NotImplementedError
 
@@ -52,7 +61,7 @@ def train(args):
     for epoch in range(epochs):
         running_loss = 0.
         
-        for b, batch in tqdm(enumerate(loader), ncols=80, desc='Epoch {}'.format(epoch), total=len(loader)):
+        for b, batch in tqdm(enumerate(train_loader), ncols=80, desc='Epoch {}'.format(epoch), total=len(train_loader)):
             images = batch['image'].to(device)
             labels = batch['label'].to(device)
                 
@@ -67,14 +76,22 @@ def train(args):
             optimizer.step()
 
         lr_scheduler.step()
+        
         if args.log:
-            wandb.log({'running loss':running_loss/len(loader)}, commit=False)
+            wandb.log({'running loss':running_loss/len(train_loader)}, commit=False)
 
-        Eval(model, test_loader, args)
+        eval(model, test_loader, args)
         
         if epoch % 10 == 0 and epoch != 0:
             torch.save(model, './experiments/'+save_file_name+'_{}.pth'.format(epoch))
     wandb.finish()
+
+def get_mean_std(dataset):
+    imgs = torch.stack([a['image'] for a in dataset], dim=3)
+    temp = imgs.view(3, -1)
+    mean_ = temp.mean(dim=1)
+    std_ = temp.std(dim=1)
+    return mean_, std_
 
 
 if __name__ == '__main__':

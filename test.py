@@ -10,7 +10,7 @@ from torchvision import transforms
 
 import pdb
 
-def Eval(model, loader, args):
+def eval(model, loader, args):
     with torch.no_grad():
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
@@ -64,8 +64,8 @@ if __name__ == '__main__':
     if args.data_mode == 'dots':
         test_dir = './datasets/TestDots/'
         testset = DotsDataset(test_dir, transforms.Compose([transforms.ToTensor()]))
-        loader = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=True)
+        test_loader = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=True)
 
-    Eval(model, testset, args)
+    eval(model, test_loader, args)
 
     wandb.finish()
