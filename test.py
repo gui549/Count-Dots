@@ -10,10 +10,9 @@ from torchvision import transforms
 
 import pdb
 
-def Eval(model, dataset, args):
+def Eval(model, loader, args):
     with torch.no_grad():
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        loader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True)
     
         model = model.to(device)
         model.eval()
@@ -38,7 +37,7 @@ def Eval(model, dataset, args):
 
         if args.log:
             wandb.log({
-                "accuracy" : preds_correct / len(dataset),
+                "accuracy" : preds_correct / len(loader.dataset),
                 "conf_mat" : wandb.plot.confusion_matrix(probs=None, y_true=all_labels, preds=all_preds, class_names=[i for i in range(args.num_classes)])
             })
    
@@ -65,6 +64,7 @@ if __name__ == '__main__':
     if args.data_mode == 'dots':
         test_dir = './datasets/TestDots/'
         testset = DotsDataset(test_dir, transforms.Compose([transforms.ToTensor()]))
+        loader = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=True)
 
     Eval(model, testset, args)
 

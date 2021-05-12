@@ -28,6 +28,7 @@ def train(args):
         dataset = DotsDataset(root_dir, transforms.Compose([transforms.ToTensor()]))
         testset = DotsDataset(test_dir, transforms.Compose([transforms.ToTensor()]))
         loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
+        test_loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
     else:
         raise NotImplementedError
 
@@ -66,10 +67,11 @@ def train(args):
             optimizer.step()
 
         lr_scheduler.step()
-        Eval(model, testset, args)
-
         if args.log:
-            wandb.log({'running loss':running_loss/len(loader)})
+            wandb.log({'running loss':running_loss/len(loader)}, commit=False)
+
+        Eval(model, test_loader, args)
+        
         if epoch % 10 == 0 and epoch != 0:
             torch.save(model, './experiments/'+save_file_name+'_{}.pth'.format(epoch))
     wandb.finish()
