@@ -26,17 +26,13 @@ def train(args):
     if args.data_mode == 'dots':
         root_dir = './datasets/Dots/'
         test_dir = './datasets/TestDots/'
-        trainset = DotsDataset(root_dir, transforms.Compose([transforms.ToTensor()]))
-        testset = DotsDataset(test_dir, transforms.Compose([transforms.ToTensor()]))
-        mean_, std_ = get_mean_std(trainset)
-        transform_train = transforms.Compose([
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize(mean_, std_),
-        ])
-        transformed_trainset = DotsDataset(root_dir, transform_train)
-        train_loader = torch.utils.data.DataLoader(transformed_trainset, batch_size=args.batch_size, shuffle=True)
+        trainset = DotsDataset(root_dir, transforms.Compose([transforms.RandomHorizontalFlip(),
+                                                             transforms.RandomHorizontalFlip(),
+                                                             transforms.ToTensor(),
+                                                             transforms.Normalize([0.9719, 0.9696, 0.9697], [0.1297, 0.1387, 0.1363])]))
+        testset = DotsDataset(test_dir, transforms.Compose([transforms.ToTensor(), 
+                                                            transforms.Normalize([0.9719, 0.9696, 0.9697], [0.1297, 0.1387, 0.1363])]))
+        train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
         test_loader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=True)
     else:
         raise NotImplementedError
@@ -86,12 +82,7 @@ def train(args):
             torch.save(model, './experiments/'+save_file_name+'_{}.pth'.format(epoch))
     wandb.finish()
 
-def get_mean_std(dataset):
-    imgs = torch.stack([a['image'] for a in dataset], dim=3)
-    temp = imgs.view(3, -1)
-    mean_ = temp.mean(dim=1)
-    std_ = temp.std(dim=1)
-    return mean_, std_
+
 
 
 if __name__ == '__main__':

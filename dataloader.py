@@ -1,8 +1,10 @@
 import torch
+import argparse
+import os
+
 from torch.utils.data import Dataset
 from PIL import Image
-
-import os
+from torchvision import transforms
 
 class DotsDataset(Dataset):
     '''
@@ -43,3 +45,21 @@ class DotsDataset(Dataset):
         }
 
         return batch
+
+def get_mean_std(dataset):
+    imgs = torch.stack([a['image'] for a in dataset], dim=3)
+    temp = imgs.view(3, -1)
+    mean_ = temp.mean(dim=1)
+    std_ = temp.std(dim=1)
+    return mean_, std_
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(description='calculate mean, std')
+    parser.add_argument("-f", "--data_path", help="data path", default="./datasets/Dots/", type=str)
+    args = parser.parse_args()
+
+    trainset = DotsDataset(args.data_path, transforms.Compose([transforms.ToTensor()]))
+    mean_, std_ = get_mean_std(trainset)
+    print(args.data_path)
+    print("mean : ", mean_, "std :", std_)
