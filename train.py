@@ -29,9 +29,9 @@ def train(args):
         trainset = DotsDataset(root_dir, transforms.Compose([transforms.RandomHorizontalFlip(),
                                                              transforms.RandomHorizontalFlip(),
                                                              transforms.ToTensor(),
-                                                             transforms.Normalize([0.9719, 0.9696, 0.9697], [0.1297, 0.1387, 0.1363])]))
+                                                             transforms.Normalize([0.9703, 0.9705, 0.9701], [0.1376, 0.1375, 0.1382])]))
         testset = DotsDataset(test_dir, transforms.Compose([transforms.ToTensor(), 
-                                                            transforms.Normalize([0.9719, 0.9696, 0.9697], [0.1297, 0.1387, 0.1363])]))
+                                                            transforms.Normalize([0.9703, 0.9705, 0.9701], [0.1376, 0.1375, 0.1382])]))
         train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
         test_loader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=True)
     else:
