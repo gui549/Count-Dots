@@ -3,7 +3,7 @@ from torch import Tensor
 import torch.nn as nn
 from typing import Type, Any, Callable, Union, List, Optional
 
-__all__ = ['resnet18']
+__all__ = ['resnet18', 'resnet18_scalar']
 
 def conv3x3(in_planes: int, out_planes: int, stride: int = 1, groups: int = 1, dilation: int = 1) -> nn.Conv2d:
     """3x3 convolution with padding"""
@@ -79,13 +79,13 @@ class Bottleneck(nn.Module):
 
 class ResNet(nn.Module):
 
-    def __init__(self, block: Type[Union[BasicBlock, Bottleneck]], layers: List[int], num_classes: int = 31, zero_init_residual: bool = False, groups: int = 1, 
+    def __init__(self, block: Type[Union[BasicBlock, Bottleneck]], layers: List[int], scalar: bool = False, num_classes: int = 31, zero_init_residual: bool = False, groups: int = 1, 
                     width_per_group: int = 64, replace_stride_with_dilation: Optional[List[bool]] = None, norm_layer: Optional[Callable[..., nn.Module]] = None) -> None:
         super(ResNet, self).__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         self._norm_layer = norm_layer
-
+        self.scalar = scalar
         self.inplanes = 64
         self.dilation = 1
         if replace_stride_with_dilation is None:
@@ -109,8 +109,16 @@ class ResNet(nn.Module):
                                        dilate=replace_stride_with_dilation[1])
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2,
                                        dilate=replace_stride_with_dilation[2])
-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(512 * block.expansion, num_classes)
+
+        if self.scalar:
+            self.flatten = nn.Flatten()
+            self.fc1 = nn.Linear(512 * 7 * 7 * block.expansion, 2048)
+            self.fc2 = nn.Linear(2048, 1024)
+            self.fc3 = nn.Linear(1024, 512)
+            self.fc4 = nn.Linear(512, 1)
+        else:
+            self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+            self.fc = nn.Linear(512 * block.expansion, num_classes)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -155,9 +163,13 @@ class ResNet(nn.Module):
         # See note [TorchScript super()]
         x = self.maxpool(self.relu(self.bn1(self.conv1(x))))
         x = self.layer4(self.layer3(self.layer2(self.layer1(x))))
-        x = self.avgpool(x)
-        x = torch.flatten(x, 1)
-        x = self.fc(x)
+        if self.scalar:
+            x = self.flatten(x)
+            x = self.fc4(self.fc3(self.fc2(self.fc1(x))))
+        else:
+            x = self.avgpool(x) 
+            x = torch.flatten(x, 1)
+            x = self.fc(x)
 
         return x
 
@@ -165,4 +177,7 @@ class ResNet(nn.Module):
         return self._forward_impl(x)
 
 def resnet18(num_classes: int, **kwargs: Any) -> ResNet:
-    return ResNet(BasicBlock, [2, 2, 2, 2], num_classes, **kwargs)
+    return ResNet(BasicBlock, [2, 2, 2, 2], False, num_classes, **kwargs)
+
+def resnet18_scalar(**kwargs: Any) -> ResNet:
+    return ResNet(BasicBlock, [2, 2, 2, 2], scalar=True, **kwargs)

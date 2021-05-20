@@ -9,7 +9,7 @@ import wandb
 
 from dataloader import DotsDataset
 from utils import get_scheduler
-from models import * # Put model name here
+from models import *  # Put model name here
 from torchvision import transforms
 from test import eval
 
@@ -46,20 +46,24 @@ def train(args):
     
     if args.model == 'resnet':
         model = resnet18(args.num_classes)
-    elif args.model == '':
+        criterion = torch.nn.CrossEntropyLoss()
+    elif args.model == 'resnet_scalar':
+        model = resnet18_scalar()
+        criterion = torch.nn.MSELoss()
+    else:
         pass
 
     model = model.to(device)
 
     optimizer = torch.optim.Adam(model.parameters() ,lr=args.lr, betas=(0.9, 0.999))
     lr_scheduler = get_scheduler(optimizer, args)
-    criterion = torch.nn.CrossEntropyLoss()
+    
     for epoch in range(epochs):
         running_loss = 0.
         
         for b, batch in tqdm(enumerate(train_loader), ncols=80, desc='Epoch {}'.format(epoch), total=len(train_loader)):
             images = batch['image'].to(device)
-            labels = batch['label'].to(device)
+            labels = batch['label'].to(device, torch.long) # set dytpe due to MSE loss
                 
             model.train()
             optimizer.zero_grad()
@@ -93,7 +97,7 @@ if __name__ == '__main__':
     parser.add_argument("-b", "--batch_size", help="batch_size", default=64, type=int)
     parser.add_argument("-d", "--data_mode", help="use which database, [davis, ]", default='dots', type=str)
     parser.add_argument("-n", "--num_classes", help="number of classes", default='31', type=int)
-    parser.add_argument("-m", "--model", help="use which model, [resnet, ]", default='resnet', type=str)
+    parser.add_argument("-m", "--model", help="use which model, [resnet, resnet_scalar, ]", default='resnet', type=str)
     parser.add_argument("-s", "--scheduler", help = "step, plateau, cosine, lambda", default = 'step', type =str)
     parser.add_argument("-f", "--save_path", help='save path for model', default = 'base', type=str)
     parser.add_argument("-l", "--log", help='log to wandb', action='store_true')

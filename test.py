@@ -18,8 +18,8 @@ def eval(model, loader, args):
         model.eval()
 
         preds_correct = 0
-        all_preds = torch.tensor([], dtype=torch.int32).to(device)
-        all_labels = torch.tensor([], dtype=torch.int32).to(device)
+        all_preds = torch.tensor([], dtype=torch.float32).to(device)
+        all_labels = torch.tensor([], dtype=torch.float32).to(device)
 
         for batch in loader:
             images = batch['image'].to(device)
