@@ -45,13 +45,19 @@ def train(args):
         })
     
     if args.model == 'resnet':
-        model = resnet18(args.num_classes)
+        if args.load_path:
+            model = torch.load(args.load_path)
+        else:
+            model = resnet18(args.num_classes)
         criterion = torch.nn.CrossEntropyLoss()
     elif args.model == 'resnet_scalar':
-        model = resnet18_scalar()
+        if args.load_path:
+            model = torch.load(args.load_path)
+        else:
+            model = resnet18_scalar()
         criterion = torch.nn.MSELoss()
     else:
-        pass
+        raise NotImplementedError
 
     model = model.to(device)
 
@@ -89,8 +95,6 @@ def train(args):
     wandb.finish()
 
 
-
-
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='train dot counter')
@@ -102,6 +106,7 @@ if __name__ == '__main__':
     parser.add_argument("-m", "--model", help="use which model, [resnet, resnet_scalar, ]", default='resnet', type=str)
     parser.add_argument("-s", "--scheduler", help = "step, plateau, cosine, lambda", default = 'step', type =str)
     parser.add_argument("-f", "--save_path", help='save path for model', default = 'base', type=str)
+    parser.add_argument("--load_path", help='load path for model', default = None, type=str)
     parser.add_argument("-l", "--log", help='log to wandb', action='store_true')
     args = parser.parse_args()
 

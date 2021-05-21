@@ -32,6 +32,8 @@ def eval(model, loader, args):
                 labels = batch['label'].to(device).view(-1, 1)
                 preds = model(images) 
                 refined_preds = torch.round(preds)
+            else :
+                raise NotImplementedError
 
             preds_correct += get_num_correct(refined_preds, labels)
             all_preds = torch.cat((all_preds, refined_preds), 0)
@@ -50,16 +52,20 @@ def eval(model, loader, args):
                 wandb.log({
                     "accuracy" : preds_correct / len(loader.dataset),
                 })
+        else:
+            print("accuracy", preds_correct / len(loader.dataset))
    
-def get_num_correct(top_pred_ids, labels):
-    return top_pred_ids.eq(labels).sum().item()
+def get_num_correct(preds, labels):
+    return preds.eq(labels).sum().item()
     
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='test dot counter')
     parser.add_argument("-n", "--num_classes", help="number of classes", default='31', type=int)
+    parser.add_argument("-m", "--model", help="use which model, [resnet, resnet_scalar, ]", default='resnet', type=str)
     parser.add_argument("-d", "--data_mode", help="use which database, [davis, ]", default='dots', type=str)
     parser.add_argument("-f", "--load_path", help="use which saved model", default=None, type=str)
+    parser.add_argument("-t", "--test_path", help="use which test set", default= './datasets/TestDots/', type=str)
     parser.add_argument("-l", "--log", help='log to wandb', action='store_true')
     args = parser.parse_args()
 
@@ -72,8 +78,8 @@ if __name__ == '__main__':
     model = torch.load(args.load_path)
 
     if args.data_mode == 'dots':
-        test_dir = './datasets/TestDots/'
-        testset = DotsDataset(test_dir, transforms.Compose([transforms.ToTensor()]))
+        test_dir = args.test_path
+        testset = DotsDataset(test_dir, transforms.Compose([transforms.ToTensor(), transforms.Normalize([0.9703, 0.9705, 0.9701], [0.1376, 0.1375, 0.1382])]))
         test_loader = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=True)
 
     eval(model, test_loader, args)
