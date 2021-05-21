@@ -63,13 +63,15 @@ def train(args):
         
         for b, batch in tqdm(enumerate(train_loader), ncols=80, desc='Epoch {}'.format(epoch), total=len(train_loader)):
             images = batch['image'].to(device)
-            labels = batch['label'].to(device, torch.long) # set dytpe due to MSE loss
+            if args.model == 'resnet_scalar':
+                labels = batch['label'].to(device, torch.float).view(-1, 1) # set dytpe due to MSE loss
+            else:
+                labels = batch['label'].to(device)
                 
             model.train()
             optimizer.zero_grad()
 
             preds = model(images)
-
             loss = torch.sum(criterion(preds, labels))
             running_loss += loss.item()
             loss.backward()

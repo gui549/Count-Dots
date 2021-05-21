@@ -23,23 +23,33 @@ def eval(model, loader, args):
 
         for batch in loader:
             images = batch['image'].to(device)
-            labels = batch['label'].to(device)
+            
+            if args.model == 'resnet':
+                labels = batch['label'].to(device)
+                preds = model(images) 
+                refined_preds = preds.argmax(dim=1)
+            elif args.model == 'resnet_scalar':
+                labels = batch['label'].to(device).view(-1, 1)
+                preds = model(images) 
+                refined_preds = torch.round(preds)
 
-            preds = model(images)
-            top_pred_ids = preds.argmax(dim=1)
-
-            preds_correct += get_num_correct(top_pred_ids, labels)
-            all_preds = torch.cat((all_preds, top_pred_ids), 0)
+            preds_correct += get_num_correct(refined_preds, labels)
+            all_preds = torch.cat((all_preds, refined_preds), 0)
             all_labels = torch.cat((all_labels, labels), 0)
         
         all_preds = (all_preds.cpu()).numpy()
         all_labels = (all_labels.cpu()).numpy()
 
         if args.log:
-            wandb.log({
-                "accuracy" : preds_correct / len(loader.dataset),
-                "conf_mat" : wandb.plot.confusion_matrix(probs=None, y_true=all_labels, preds=all_preds, class_names=[i for i in range(args.num_classes)])
-            })
+            if args.model == 'resnet':
+                wandb.log({
+                    "accuracy" : preds_correct / len(loader.dataset),
+                    "conf_mat" : wandb.plot.confusion_matrix(probs=None, y_true=all_labels, preds=all_preds, class_names=[i for i in range(args.num_classes)])
+                })
+            elif args.model == 'resnet_scalar' :
+                wandb.log({
+                    "accuracy" : preds_correct / len(loader.dataset),
+                })
    
 def get_num_correct(top_pred_ids, labels):
     return top_pred_ids.eq(labels).sum().item()
