@@ -23,42 +23,37 @@ def train(args):
     epochs = args.epochs
     save_file_name = args.save_path
 
-    if args.data_mode == 'dots':
-        root_dir = './datasets/Dots/'
-        test_dir = './datasets/TestDots/'
-        trainset = DotsDataset(root_dir, transforms.Compose([transforms.RandomHorizontalFlip(),
-                                                             transforms.RandomHorizontalFlip(),
-                                                             transforms.ToTensor(),
-                                                             transforms.Normalize([0.9703, 0.9705, 0.9701], [0.1376, 0.1375, 0.1382])]))
-        testset = DotsDataset(test_dir, transforms.Compose([transforms.ToTensor(), 
+    root_dir = args.root
+    test_dir = args.test_root
+    trainset = DotsDataset(root_dir, transforms.Compose([transforms.RandomHorizontalFlip(),
+                                                            transforms.RandomHorizontalFlip(),
+                                                            transforms.ToTensor(),
                                                             transforms.Normalize([0.9703, 0.9705, 0.9701], [0.1376, 0.1375, 0.1382])]))
-        train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
-        test_loader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=True)
-    else:
-        raise NotImplementedError
+    testset = DotsDataset(test_dir, transforms.Compose([transforms.ToTensor(), 
+                                                        transforms.Normalize([0.9703, 0.9705, 0.9701], [0.1376, 0.1375, 0.1382])]))
+    train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=True)
 
     if args.log:
-        wandb.init(project='project name', config = {
+        wandb.init(entity='kongjoo',
+        project='Counting Stars', config = {
             'batch_size': args.batch_size,
             'lr': args.lr,
             'save_file_name': args.save_path
         })
     
+        
     if args.model == 'resnet':
-        if args.load_path:
-            model = torch.load(args.load_path)
-        else:
-            model = resnet18(args.num_classes)
+        model = resnet18(trainset.class_num)
         criterion = torch.nn.CrossEntropyLoss()
     elif args.model == 'resnet_scalar':
-        if args.load_path:
-            model = torch.load(args.load_path)
-        else:
-            model = resnet18_scalar()
+        model = resnet18_scalar()
         criterion = torch.nn.MSELoss()
     else:
         raise NotImplementedError
 
+    if args.load_path:
+        model = torch.load(args.load_path)
     model = model.to(device)
 
     optimizer = torch.optim.Adam(model.parameters() ,lr=args.lr, betas=(0.9, 0.999))
@@ -98,11 +93,11 @@ def train(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='train dot counter')
+    parser.add_argument("--root", help="data root", default='./datasets/Dots/', type=str)
+    parser.add_argument("--test_root", help="test data root", default='./datasets/TestDots/', type=str)
     parser.add_argument("-e", "--epochs", help="training epochs", default=120, type=int)
     parser.add_argument('-lr','--lr',help='learning rate',default=5e-4, type=float)
     parser.add_argument("-b", "--batch_size", help="batch_size", default=64, type=int)
-    parser.add_argument("-d", "--data_mode", help="use which database, [davis, ]", default='dots', type=str)
-    parser.add_argument("-n", "--num_classes", help="number of classes", default='31', type=int)
     parser.add_argument("-m", "--model", help="use which model, [resnet, resnet_scalar, ]", default='resnet', type=str)
     parser.add_argument("-s", "--scheduler", help = "step, plateau, cosine, lambda", default = 'step', type =str)
     parser.add_argument("-f", "--save_path", help='save path for model', default = 'base', type=str)

@@ -24,6 +24,7 @@ class DotsDataset(Dataset):
         self.root_dir = root_dir
         self.total_imgs = len(self.total_list)
         self.total_list = self.total_list
+        self.class_num = len(set([i.split('_')[0] for i in self.total_list]))
         
     def __len__(self):
         return self.total_imgs
@@ -34,7 +35,7 @@ class DotsDataset(Dataset):
         img_path_list = img_path.split('/')
         file_name = img_path_list[-1] # {label}_filenum.jpg
         label = int(file_name.split('_')[0])
-        img = Image.open(self.root_dir + img_path)
+        img = Image.open(os.path.join(self.root_dir,img_path))
 
         if self.transform is not None:
             img = self.transform(img)
