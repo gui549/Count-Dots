@@ -85,7 +85,7 @@ def train(args):
 
         eval(model, test_loader, args)
         
-        if epoch % 10 == 0 and epoch != 0:
+        if (epoch % 10 == 0 and epoch != 0) or epoch == args.epochs - 1:
             torch.save(model, './experiments/'+save_file_name+'_{}.pth'.format(epoch))
     wandb.finish()
 

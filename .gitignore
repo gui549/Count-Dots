@@ -5,3 +5,4 @@ wandb/
 datasets/
 venv/
 __pycache__
+datasets.zip

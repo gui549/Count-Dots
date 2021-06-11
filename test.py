@@ -7,6 +7,7 @@ import wandb
 
 from dataloader import DotsDataset
 from torchvision import transforms
+from models import *
 
 import pdb
 
@@ -61,27 +62,38 @@ def get_num_correct(preds, labels):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='test dot counter')
-    parser.add_argument("-n", "--num_classes", help="number of classes", default='31', type=int)
     parser.add_argument("-m", "--model", help="use which model, [resnet, resnet_scalar, ]", default='resnet', type=str)
-    parser.add_argument("-d", "--data_mode", help="use which database, [davis, ]", default='dots', type=str)
     parser.add_argument("-f", "--load_path", help="use which saved model", default=None, type=str)
     parser.add_argument("-t", "--test_path", help="use which test set", default= './datasets/TestDots/', type=str)
     parser.add_argument("-l", "--log", help='log to wandb', action='store_true')
+
     args = parser.parse_args()
+
+    if args.log:
+        wandb.init(entity='kongjoo',
+        project='Counting Stars', config = {
+            'test_model': args.load_path,
+            'test_set': args.test_path
+        })
 
     if args.load_path == None:
         raise SyntaxError("Enter a valid load path")
 
-    if args.log:
-        wandb.init(project='project name')
+    test_dir = args.test_path
+    testset = DotsDataset(test_dir, transforms.Compose([transforms.ToTensor(), transforms.Normalize([0.9703, 0.9705, 0.9701], [0.1376, 0.1375, 0.1382])]))
+    test_loader = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=True)
+    
+    if args.model == 'resnet':
+        model = resnet18(testset.class_num)
+        criterion = torch.nn.CrossEntropyLoss()
+    elif args.model == 'resnet_scalar':
+        model = resnet18_scalar()
+        criterion = torch.nn.MSELoss()
+    else:
+        raise NotImplementedError
 
-    model = torch.load(args.load_path)
-
-    if args.data_mode == 'dots':
-        test_dir = args.test_path
-        testset = DotsDataset(test_dir, transforms.Compose([transforms.ToTensor(), transforms.Normalize([0.9703, 0.9705, 0.9701], [0.1376, 0.1375, 0.1382])]))
-        test_loader = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=True)
+    if args.load_path:
+        model = torch.load(args.load_path)        
 
     eval(model, test_loader, args)
-
     wandb.finish()
