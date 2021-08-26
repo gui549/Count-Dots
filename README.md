@@ -3,7 +3,8 @@
 Count how many dots are in an image using Deep Learning.
 
 **Dataset Example**
-<img src = "https://user-images.githubusercontent.com/70506921/131015684-5f59518e-4ab5-4d8b-bdc4-8a8a6a4ca7c2.png" width="300" height="300"/><img src = "https://user-images.githubusercontent.com/70506921/131015688-8e2954b8-d03e-48fd-a7b1-7598bf427c88.png" width="300" height="300"/><img src = "https://user-images.githubusercontent.com/70506921/131015693-9200e37c-c27b-48b2-ab3c-8963777f347d.png" width="300" height="300"/>
+<img src = "https://user-images.githubusercontent.com/70506921/131016792-248ebe45-d800-4d2e-8695-4ca5cb7a54b8.png" width="250" height="250"/><img src = "https://user-images.githubusercontent.com/70506921/131015688-8e2954b8-d03e-48fd-a7b1-7598bf427c88.png" width="250" height="250"/>
+<img src = "https://user-images.githubusercontent.com/70506921/131015693-9200e37c-c27b-48b2-ab3c-8963777f347d.png" width="250" height="250"/><img src = "https://user-images.githubusercontent.com/70506921/131016797-8236869c-319f-4137-8477-0a824c08c103.png" width="250" height="250"/>
 
 ## Installation
 ```
