@@ -92,7 +92,7 @@ def train(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='train dot counter')
-    parser.add_argument("-e", "--epochs", help="training epochs", default=120, type=int)
+    parser.add_argument("-e", "--epochs", help="training epochs", default=150, type=int)
     parser.add_argument('-lr','--lr',help='learning rate',default=5e-4, type=float)
     parser.add_argument("-b", "--batch_size", help="batch_size", default=64, type=int)
     parser.add_argument("-d", "--data_mode", help="use which database, [davis, ]", default='dots', type=str)
