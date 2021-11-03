@@ -15,3 +15,5 @@ COPY test.py ./test.py
 
 ENV PYTHONPATH /repo
 ENTRYPOINT ["python3", "./train.py"]
+
+--root ./datasets/DotsEven/ -f base -l -m resnet_scalar --batch_size 32
